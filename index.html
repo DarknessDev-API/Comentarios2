@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publicaciones de Discord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .search-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .post {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            cursor: pointer; /* Cambia el cursor para indicar que es clickeable */
+        }
+        .post:hover {
+            transform: scale(1.02);
+        }
+        .post img {
+            width: 100%;
+            height: auto;
+        }
+        .post-content {
+            padding: 15px;
+        }
+        .post-content h2 {
+            font-size: 1.2em;
+            margin: 0 0 10px;
+        }
+        .post-content p {
+            font-size: 0.9em;
+            color: #555;
+        }
+        .footer {
+            font-size: 0.8em;
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .comments-section {
+            display: none; /* Oculta la sección de comentarios por defecto */
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .comment {
+            font-size: 0.9em;
+            color: #333;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Publicaciones de Discord</h1>
+    <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar publicaciones..." oninput="searchPosts()">
+    </div>
+    <div id="posts-container" class="container"></div>
+
+    <script>
+        let allPosts = []; // Almacena todas las publicaciones para la búsqueda
+
+        async function fetchPosts() {
+            const response = await fetch('/posts');
+            allPosts = await response.json(); // Guarda todas las publicaciones
+            displayPosts(allPosts); // Muestra todas las publicaciones al cargar
+        }
+
+        function displayPosts(posts) {
+            const postsContainer = document.getElementById('posts-container');
+            postsContainer.innerHTML = ''; // Limpiar el contenedor antes de agregar nuevos posts
+
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = `
+                    ${post.image ? `<img src="${post.image}" alt="Imagen de la publicación">` : ''}
+                    <div class="post-content" onclick="toggleComments('${post.id}')">
+                        <h2>${post.title}</h2>
+                        <p>${post.comments.length > 0 ? `${post.comments.length} comentarios` : 'No hay comentarios.'}</p>
+                        <div class="footer">
+                            <span>Likes: ${post.likes.length}</span>
+                        </div>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        ${post.comments.map(c => `<div class="comment"><strong>${c.userNickname}:</strong> ${c.comentario}</div>`).join('')}
+                    </div>
+                `;
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        function searchPosts() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const filteredPosts = allPosts.filter(post => post.title.toLowerCase().includes(searchTerm));
+            displayPosts(filteredPosts); // Muestra las publicaciones filtradas
+        }
+
+        function toggleComments(postId) {
+            const commentsSection = document.getElementById(`comments-${postId}`);
+            commentsSection.style.display = commentsSection.style.display === 'none' || commentsSection.style.display === '' ? 'block' : 'none';
+        }
+
+        // Llama a la función para obtener las publicaciones al cargar la página
+        window.onload = fetchPosts;
+    </script>
+
+</body>
+</html>
